@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <style>
+    canvas {
+      border: 25px solid rgb(2, 141, 2);
+      display: block;
+      margin: 20px auto;
+      background-color: lime;
+    }
+
+    #gameOverMessage {
+      text-align: left;
+      font-size: 28px;
+      color: red;
+      display: none;
+    }
+    
+    body {
+    margin: 0;
+    padding: 0;
+    background: url('https://img.freepik.com/premium-vector/pixel-clouds-pattern-seamless-print-with-8-bit-video-game-clouds-concept-art-vector-blue-sky-environment-background-texture_102902-6113.jpg') no-repeat center center fixed;
+    background-size: cover;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+}
+
+  </style>
+</head>
+<body>
+  <canvas id="snakeCanvas" width="600" height="600"></canvas>
+  <button style="padding: 15px 30px; font-size: 20px; margin-top: -100px;" id="startButton" onclick="startGame()">Start Game</button>
+  <div style=" font-size: 100px; font-weight: bold; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);" id="gameOverMessage">Game Over</div>
+  
+
+  <audio id="eatSound" src="c:\Users\ahmad\Downloads\collectcoin-6075.mp3"></audio>
+
+  <script>
+    const canvas = document.getElementById('snakeCanvas');
+    const ctx = canvas.getContext('2d');
+    const eatSound = document.getElementById('eatSound');
+
+    const gridSize = 30;
+    let snake = [];
+    let food = {};
+    let direction = 'right';
+    let speed = 200; // milliseconds
+    let gameRunning = false;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw snake
+snake.forEach((segment, index) => {
+  drawSnakeSegment(segment.x, segment.y, index === 0); // Head is true, body is false
+});
+
+// ...
+
+function drawSnakeSegment(x, y, isHead) {
+  ctx.beginPath();
+  ctx.arc(x * gridSize + gridSize / 2, y * gridSize + gridSize / 2, gridSize / 2, 0, 2 * Math.PI);
+  ctx.fillStyle = isHead ? 'purple' : 'blue'; // Head is blue, body is green
+  ctx.fill();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.closePath();
+
+  // Draw eyes on the head
+  if (isHead) {
+    drawEye(x, y, -gridSize / 4, -gridSize / 6); // Left eye
+    drawEye(x, y, gridSize / 4, -gridSize / 6); // Right eye
+  }
+}
+
+function drawEye(x, y, eyeOffsetX, eyeOffsetY) {
+  ctx.beginPath();
+  ctx.arc(x * gridSize + gridSize / 2 + eyeOffsetX, y * gridSize + gridSize / 2 + eyeOffsetY, gridSize / 8, 0, 2 * Math.PI);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  ctx.closePath();
+
+  // Draw black pupil
+  const pupilSize = gridSize / 13;
+  ctx.beginPath();
+  ctx.arc(x * gridSize + gridSize / 2 + eyeOffsetX, y * gridSize + gridSize / 2 + eyeOffsetY, pupilSize, 0, 2 * Math.PI);
+  ctx.fillStyle = 'black';
+  ctx.fill();
+  ctx.closePath();
+}
+
+
+      // Draw food
+      ctx.fillStyle = 'red';
+      ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+    }
+
+    function update() {
+      const head = { ...snake[0] };
+
+      // Update snake's head based on direction
+      if (direction === 'up') head.y--;
+      else if (direction === 'down') head.y++;
+      else if (direction === 'left') head.x--;
+      else if (direction === 'right') head.x++;
+
+      // Check for collision with walls
+      if (head.x < 0 || head.x >= canvas.width / gridSize || head.y < 0 || head.y >= canvas.height / gridSize) {
+        gameOver();
+        return;
+      }
+
+      // Check for collision with self
+      if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        gameOver();
+        return;
+      }
+
+      // Check for collision with food
+      if (head.x === food.x && head.y === food.y) {
+        snake.unshift({ ...food }); // Add new head
+        generateFood(); // Generate new food
+        eatSound.play(); // Play eat sound
+        // Increase speed when snake eats the food
+        speed -= 10; // You can adjust this value based on how much faster you want the snake to be
+      } else {
+        snake.pop(); // Remove tail
+      }
+
+      snake.unshift(head); // Move head
+    }
+
+    function generateFood() {
+      food = {
+        x: Math.floor(Math.random() * (canvas.width / gridSize)),
+        y: Math.floor(Math.random() * (canvas.height / gridSize))
+      };
+    }
+
+    function resetGame() {
+      snake = [];
+      direction = 'right';
+      generateFood();
+      gameRunning = false;
+      document.getElementById('startButton').innerText = 'Start Game';
+      document.getElementById('gameOverMessage').style.display = 'none';
+      speed = 200; // Reset speed to its initial value
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      document.getElementById('startButton').innerText = 'Start Game';
+      document.getElementById('gameOverMessage').style.display = 'block';
+    }
+
+    function keyDownHandler(event) {
+      if (!gameRunning) {
+        gameRunning = true;
+        document.getElementById('startButton').innerText = 'Pause Game';
+        snake = [{ x: 10, y: 10 }]; // Initialize snake
+        generateFood(); // Generate initial food
+        document.getElementById('gameOverMessage').style.display = 'none';
+        gameLoop();
+      }
+
+      if (event.key === 'ArrowUp' && direction !== 'down') direction = 'up';
+      else if (event.key === 'ArrowDown' && direction !== 'up') direction = 'down';
+      else if (event.key === 'ArrowLeft' && direction !== 'right') direction = 'left';
+      else if (event.key === 'ArrowRight' && direction !== 'left') direction = 'right';
+    }
+
+    function startGame() {
+      if (!gameRunning) {
+        gameRunning = true;
+        document.getElementById('startButton').innerText = 'Pause Game';
+        snake = [{ x: 10, y: 10 }]; // Initialize snake
+        generateFood(); // Generate initial food
+        document.getElementById('gameOverMessage').style.display = 'none';
+        gameLoop();
+      } else {
+        resetGame();
+      }
+    }
+
+    document.addEventListener('keydown', keyDownHandler);
+
+    function gameLoop() {
+      if (gameRunning) {
+        update();
+        draw();
+        setTimeout(gameLoop, speed);
+      }
+    }
+
+    resetGame(); // Call resetGame to initialize the game state
+ 
+
+  </script>
+</body>
+</html>
+
