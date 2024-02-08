@@ -1,0 +1,23 @@
+canvas {
+  border: 25px solid rgb(2, 141, 2);
+  display: block;
+  margin: 20px auto;
+  background-color: lime;
+}
+
+#gameOverMessage {
+  text-align: left;
+  font-size: 28px;
+  color: red;
+  display: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: url('https://img.freepik.com/premium-vector/pixel-clouds-pattern-seamless-print-with-8-bit-video-game-clouds-concept-art-vector-blue-sky-environment-background-texture_102902-6113.jpg') no-repeat center center fixed;
+  background-size: cover;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+}
